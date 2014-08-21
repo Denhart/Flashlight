@@ -3,6 +3,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
@@ -24,46 +25,6 @@ public class MyActivity extends Activity implements Callback {
     private Camera camera;
     SurfaceHolder mHolder;
     Parameters p;
-
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        SurfaceView preview = (SurfaceView)findViewById(R.id.PREVIEW);
-        mHolder = preview.getHolder();
-        mHolder.addCallback(this);
-        camera = Camera.open();
-        p = camera.getParameters();
-    }
-
-
-    protected void onRestart(){
-        super.onRestart();
-        if (camera != null) {
-            camera.release();
-        }
-    }
-
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        try {
-            camera.open().reconnect();
-        }catch (Exception e){
-
-        }
-        if(isLighOn)
-            turnOnFlash();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (camera != null) {
-            camera.release();
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,6 +65,36 @@ public class MyActivity extends Activity implements Callback {
         });
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        SurfaceView preview = (SurfaceView)findViewById(R.id.PREVIEW);
+        mHolder = preview.getHolder();
+        mHolder.addCallback(this);
+        camera = Camera.open();
+        p = camera.getParameters();
+    }
+    protected void onRestart(){
+        super.onRestart();
+        if (camera != null) {
+              camera.release();
+         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        try {
+            camera.open().reconnect();
+       }catch (Exception e){
+
+        }
+        if(isLighOn)
+            turnOnFlash();
+    }
+
+
     private void turnOnFlash(){
         p.setFlashMode(Parameters.FLASH_MODE_TORCH);
         camera.setParameters(p);
@@ -137,7 +128,6 @@ public class MyActivity extends Activity implements Callback {
 
     @Override
     public void surfaceChanged(SurfaceHolder holder,int format,int width,int height){
-
     }
 
     @Override
@@ -152,7 +142,12 @@ public class MyActivity extends Activity implements Callback {
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder){
-        camera.stopPreview();
-        mHolder = null;
+        if(!isLighOn) {
+            if (camera != null) {
+                camera.stopPreview();
+                camera.release();
+                mHolder = null;
+            }
+        }
     }
 }
